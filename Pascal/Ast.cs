@@ -44,9 +44,9 @@ public class AstCompound() : Ast
     public List<Ast> Nodes { get; } = [];
 }
 
-public class AstType(string type) : Ast
+public class AstType(string name) : Ast
 {
-    public string Type { get; } = type;
+    public string Name { get; } = name;
 }
 
 public class AstParam(AstVar var, AstType type) : Ast

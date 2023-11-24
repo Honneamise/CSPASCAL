@@ -48,7 +48,7 @@ public static class SymbolTableBuilder
 
     private static void Visit(AstVarDecl node)
     {
-        string typeName = node.TypeNode.Type;
+        string typeName = node.TypeNode.Name;
         Symbol typeSymbol = symtab.Lookup(typeName) ?? throw new Exception("Invalid datatype");
 
         string varName = node.VarNode.Name;

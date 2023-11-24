@@ -20,7 +20,7 @@ public static class Init
     {
         CultureInfo.CurrentCulture = new CultureInfo("en-US");
 
-        AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
+        //AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
     }
 }   
 

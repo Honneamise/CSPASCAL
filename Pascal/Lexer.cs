@@ -116,7 +116,7 @@ public class Lexer
             Advance();
         }
 
-        return Keywords.TryGetValue(str, out Token? value) ? value : new Token(TokenType.ID, str);
+        return Keywords.TryGetValue(str.ToUpper(), out Token? value) ? value : new Token(TokenType.ID, str);
     }
 
     public Token NextToken()

@@ -3,12 +3,15 @@
 
 public static class SemanticAnalyzer
 {
-    private static readonly ScopedSymbolTable symtab = new("global",1);
+    private static ScopedSymbolTable? currentScope = null;
 
     private static void Visit(AstVar node)
     {
+        if (currentScope == null) { throw new Exception("Invalid scoper"); }
+        
         string varName = node.Name;
-        _ = symtab.Lookup(varName) ?? throw new Exception($"{varName}:undeclared variable");
+        
+        _ = currentScope.Lookup(varName) ?? throw new Exception($"{varName}:undeclared variable");
     }
 
     private static void Visit(AstBinOp node)
@@ -31,17 +34,55 @@ public static class SemanticAnalyzer
         }
     }
 
+    private static void Visit(AstProcedureDecl node)
+    {
+        if (currentScope == null) { throw new Exception("Invalid scoper"); }
+
+        string procName = node.Name;
+
+        SymbolProcedure procSymbol = new(procName, []);
+
+        currentScope.Define(procSymbol);
+
+        ScopedSymbolTable procScope = new(procName, currentScope.Level + 1, currentScope);
+
+        currentScope = procScope;
+
+        foreach(AstParam param in node.Params)
+        {
+            Symbol? paramType = currentScope.Lookup(param.Type.Name) ?? throw new Exception($"{param.Type.Name}:invalid data type");
+            
+            string paramName = param.Var.Name;
+
+            SymbolVar varSymbol = new(paramName, paramType);    
+
+            currentScope.Define(varSymbol);
+
+            procSymbol.Parameters.Add(varSymbol);
+        }
+
+        Visit(node.Block);
+
+        Console.WriteLine(procScope.ToString());
+
+        currentScope = currentScope.Enclosing;
+    }
+
     private static void Visit(AstVarDecl node)
     {
-        string typeName = node.TypeNode.Type;
-        Symbol typeSymbol = symtab.Lookup(typeName) ?? throw new Exception($"{typeName}:invalid datatype");
+        if (currentScope == null) { throw new Exception("Invalid scoper"); }
+
+        string typeName = node.TypeNode.Name;
+
+        Symbol typeSymbol = currentScope.Lookup(typeName) ?? throw new Exception($"{typeName}:invalid datatype");
 
         string varName = node.VarNode.Name;
+
         Symbol varSymbol = new SymbolVar(varName, typeSymbol);
 
-        if (symtab.Lookup(varName) != null) { throw new Exception($"{varName}:duplicated variable name"); }
+        if (currentScope.Lookup(varName) != null) { throw new Exception($"{varName}:duplicated variable name"); }
 
-        symtab.Define(varSymbol);
+        currentScope.Define(varSymbol);
     }
 
     private static void Visit(AstBlock node)
@@ -56,7 +97,15 @@ public static class SemanticAnalyzer
 
     private static void Visit(AstProgram node)
     {
+        ScopedSymbolTable globalScope = new("GLOBAL", 1, currentScope);
+
+        currentScope = globalScope;
+
         Visit(node.Block);
+
+        Console.WriteLine(globalScope.ToString());
+
+        currentScope = currentScope.Enclosing;
     }
 
     private static void Visit(Ast node)
@@ -70,8 +119,8 @@ public static class SemanticAnalyzer
             case AstBinOp: Visit((AstBinOp)node); break;
             case AstAssign: Visit((AstAssign)node); break;
             case AstCompound: Visit((AstCompound)node); break;
-            case AstProcedureDecl: break;
             case AstType: break;
+            case AstProcedureDecl: Visit((AstProcedureDecl)node); break;
             case AstVarDecl: Visit((AstVarDecl)node); break;
             case AstBlock: Visit((AstBlock)node); break;
             case AstProgram: Visit((AstProgram)node); break;
@@ -81,10 +130,10 @@ public static class SemanticAnalyzer
         }
     }
 
-    public static ScopedSymbolTable Analyze(Ast ast)
+    public static ScopedSymbolTable? Analyze(Ast ast)
     {
         Visit(ast);
 
-        return symtab;
+        return currentScope;
     }
 }

@@ -272,8 +272,10 @@ public class Parser(Lexer lexer)
             {
                 Consume(TokenType.SEMI);
                 
-                list = new(list.Concat(FormalParameters()));
+                parameters = new(parameters.Concat(FormalParameters()));
             }
+
+            list = parameters;
         }
 
         return list;

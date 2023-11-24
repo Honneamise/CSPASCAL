@@ -6,19 +6,24 @@ namespace CSPASCAL;
 public class Program
 {
     const string src = @"
-    PROGRAM Main;
-    VAR x, y: REAL;
+    program Main;
+   var x, y : real;
 
-        PROCEDURE Alpha(a : INTEGER);
-        VAR y : INTEGER;
-        BEGIN
-          x := a + x + y;
-        END;
+   procedure AlphaA(a : integer);
+      var y : integer;
+   begin { AlphaA }
 
-    BEGIN { Main }
-    x := 2;
-    y := 3;
-    END.  { Main }";
+   end;  { AlphaA }
+
+   procedure AlphaB(a : integer);
+      var b : integer;
+   begin { AlphaB }
+
+   end;  { AlphaB }
+
+begin { Main }
+
+end.  { Main }";
 
     private static void Main()
     {
@@ -28,15 +33,13 @@ public class Program
         Console.WriteLine("********************");
         Console.Write(src + "\n");
 
-        //Lexer lexer = new(src);
+        Lexer lexer = new(src);
 
-        //Parser parser = new(lexer);
+        Parser parser = new(lexer);
 
-        //Ast ast = parser.GenerateAst();
+        Ast ast = parser.GenerateAst();
 
-        //ScopedSymbolTable symtab = SemanticAnalyzer.Analyze(ast);
-
-        //Console.WriteLine(symtab.ToString());
+        ScopedSymbolTable? _ = SemanticAnalyzer.Analyze(ast);
 
         //Interpreter intp = new(symtab);
 
@@ -44,13 +47,6 @@ public class Program
 
         //Console.WriteLine(intp.ToString());
 
-        SymbolProcedure s = new("name", []);
-
-        Console.WriteLine(s);
-
-        s.Parameters.Add(new("test", new Symbol("INTEGER")));
-
-        Console.WriteLine(s);
 
     }
 }

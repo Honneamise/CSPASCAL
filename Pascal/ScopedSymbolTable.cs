@@ -6,17 +6,18 @@ public class ScopedSymbolTable
     public string Name { get; }
     public uint Level { get; }
     public Dictionary<string, Symbol> Symbols { get; }
+    public ScopedSymbolTable? Enclosing { get; }
 
-    public ScopedSymbolTable(string name, uint level)
+    public ScopedSymbolTable(string name, uint level, ScopedSymbolTable? enclosing)
     {
         Name = name;
         Level = level;
         Symbols = [];
+        Enclosing = enclosing;
 
         //inititialize builtin types
         Define(new Symbol("INTEGER"));
         Define(new Symbol("REAL"));
-        Define(new Symbol("PROCEDURE"));//???
     }
 
     public void Define(Symbol symbol)
@@ -38,7 +39,7 @@ public class ScopedSymbolTable
     public override string ToString()
     {
 
-        string str = $"TABLE:{Name} LEVEL:{Level}\n";
+        string str = $"TABLE:{Name}\nLEVEL:{Level}\nENCLOSING:{Enclosing?.Name}\n";
 
         foreach (var item in Symbols)
         {
