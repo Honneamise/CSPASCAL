@@ -16,8 +16,8 @@ public class ScopedSymbolTable
         Enclosing = enclosing;
 
         //inititialize builtin types
-        Define(new Symbol("INTEGER"));
-        Define(new Symbol("REAL"));
+        Define(new Symbol("integer"));
+        Define(new Symbol("real"));
     }
 
     public void Define(Symbol symbol)
@@ -31,14 +31,20 @@ public class ScopedSymbolTable
     {
         //Console.WriteLine($"Lookup : {name}");
 
-        if (Symbols.TryGetValue(name, out var symbol)) { return symbol; }
+        if (Symbols.TryGetValue(name, out Symbol? symbol)) { return symbol; }
+        else if (Enclosing != null)
+        {
+            return Enclosing.Lookup(name);
+        }
+        else
+        {
+            return null;
+        }
 
-        return null;
     }
 
     public override string ToString()
     {
-
         string str = $"TABLE:{Name}\nLEVEL:{Level}\nENCLOSING:{Enclosing?.Name}\n";
 
         foreach (var item in Symbols)

@@ -6,20 +6,14 @@ namespace CSPASCAL;
 public class Program
 {
     const string src = @"
-    program Main;
-   var x, y : real;
+program Main;
+   var x, y: real;
 
-   procedure AlphaA(a : integer);
+   procedure Alpha(a : integer);
       var y : integer;
-   begin { AlphaA }
-
-   end;  { AlphaA }
-
-   procedure AlphaB(a : integer);
-      var b : integer;
-   begin { AlphaB }
-
-   end;  { AlphaB }
+   begin
+      x := b + x + y; { ERROR here! }
+   end;
 
 begin { Main }
 

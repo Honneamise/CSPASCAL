@@ -7,7 +7,7 @@ public static class SemanticAnalyzer
 
     private static void Visit(AstVar node)
     {
-        if (currentScope == null) { throw new Exception("Invalid scoper"); }
+        if (currentScope == null) { throw new Exception("Invalid scope"); }
         
         string varName = node.Name;
         
@@ -22,8 +22,8 @@ public static class SemanticAnalyzer
 
     private static void Visit(AstAssign node)
     {
-        Visit(node.Left);
         Visit(node.Right);
+        Visit(node.Left);
     }
     
     private static void Visit(AstCompound node)
@@ -36,7 +36,7 @@ public static class SemanticAnalyzer
 
     private static void Visit(AstProcedureDecl node)
     {
-        if (currentScope == null) { throw new Exception("Invalid scoper"); }
+        if (currentScope == null) { throw new Exception("Invalid scope"); }
 
         string procName = node.Name;
 
@@ -80,7 +80,7 @@ public static class SemanticAnalyzer
 
         Symbol varSymbol = new SymbolVar(varName, typeSymbol);
 
-        if (currentScope.Lookup(varName) != null) { throw new Exception($"{varName}:duplicated variable name"); }
+        //if (currentScope.Lookup(varName) != null) { throw new Exception($"{varName}:duplicated variable name"); }
 
         currentScope.Define(varSymbol);
     }

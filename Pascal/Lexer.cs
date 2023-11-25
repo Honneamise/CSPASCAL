@@ -5,14 +5,14 @@ public class Lexer
 {
     private static readonly Dictionary<string, Token> Keywords = new()
     {
-        ["PROGRAM"] = new Token(TokenType.PROGRAM, "PROGRAM"),
-        ["VAR"] = new Token(TokenType.VAR, "VAR"),
-        ["PROCEDURE"] = new Token(TokenType.PROCEDURE, "PROCEDURE"),
-        ["BEGIN"] = new Token(TokenType.BEGIN, "BEGIN"),
-        ["END"] = new Token(TokenType.END, "END"),
-        ["INTEGER"] = new Token(TokenType.INTEGER, "INTEGER"),
-        ["REAL"] = new Token(TokenType.REAL, "REAL"),
-        ["DIV"] = new Token(TokenType.INTEGER_DIV, "DIV"),
+        ["program"] = new Token(TokenType.PROGRAM, "program"),
+        ["var"] = new Token(TokenType.VAR, "var"),
+        ["procedure"] = new Token(TokenType.PROCEDURE, "procedure"),
+        ["begin"] = new Token(TokenType.BEGIN, "begin"),
+        ["end"] = new Token(TokenType.END, "end"),
+        ["integer"] = new Token(TokenType.INTEGER, "integer"),
+        ["real"] = new Token(TokenType.REAL, "real"),
+        ["div"] = new Token(TokenType.INTEGER_DIV, "div"),
     };
 
     private readonly string text;
@@ -116,7 +116,7 @@ public class Lexer
             Advance();
         }
 
-        return Keywords.TryGetValue(str.ToUpper(), out Token? value) ? value : new Token(TokenType.ID, str);
+        return Keywords.TryGetValue(str, out Token? value) ? value : new Token(TokenType.ID, str);
     }
 
     public Token NextToken()
