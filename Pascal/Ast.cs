@@ -6,76 +6,146 @@ public abstract class Ast
     public override string ToString() => "[" + GetType().Name + "]";
 }
 
-public class AstEmpty() : Ast { }
+public class AstEmpty : Ast { }
 
-public class AstNum(string str) : Ast
+public class AstNum : Ast
 {
-    public string StrValue { get; } = str;
+    public string StrValue { get; }
     public int IntValue { get => int.Parse(StrValue); }
     public float FloatValue { get => float.Parse(StrValue); }
+
+    public AstNum(string str)
+    {
+        StrValue = str;
+    }
 }
 
-public class AstVar(string str) : Ast
+public class AstVar : Ast
 {
-    public string Name { get; } = str;
+    public string Name { get; }
+
+    public AstVar(string name) 
+    { 
+        Name = name;
+    }
 }
 
-public class AstUnaryOp(TokenType op, Ast expr) : Ast
+public class AstUnaryOp : Ast
 {
-    public Ast Expr { get; } = expr;
-    public TokenType Op { get; } = op;
+    public Ast Expr { get; }
+    public TokenType Op { get; }
+
+    public AstUnaryOp(TokenType op, Ast expr)
+    {
+        Op = op;
+        Expr = expr;
+    }
 }
 
-public class AstBinOp(Ast left, TokenType op, Ast right) : Ast
+public class AstBinOp : Ast
 {
-    public Ast Left { get; } = left;
-    public TokenType Op { get; } = op;
-    public Ast Right { get; } = right;
+    public Ast Left { get; }
+    public TokenType Op { get; }
+    public Ast Right { get; }
+
+    public AstBinOp(Ast left, TokenType op, Ast right)
+    {
+        Left = left;
+        Op = op;
+        Right = right;
+    }
 }
 
-public class AstAssign(AstVar left, Ast right) : Ast
+public class AstAssign : Ast
 {
-    public AstVar Left { get; } = left;
-    public Ast Right { get; } = right;
+    public AstVar Left { get; }
+    public Ast Right { get; }
+
+    public AstAssign(AstVar left, Ast right)
+    {
+        Left = left;
+        Right = right;
+    }
 }
 
-public class AstCompound() : Ast
+public class AstCompound : Ast
 {
-    public List<Ast> Nodes { get; } = [];
+    public List<Ast> Nodes { get; }
+
+    public AstCompound()
+    {
+        Nodes = new List<Ast>();
+    }
 }
 
-public class AstType(string name) : Ast
+public class AstType : Ast
 {
-    public string Name { get; } = name;
+    public string Name { get; }
+
+    public AstType(string name)
+    {
+        Name=name;
+    }
 }
 
-public class AstParam(AstVar var, AstType type) : Ast
+public class AstParam : Ast
 {
-    public AstVar Var { get; } = var;
-    public AstType Type { get; } = type;
+    public AstVar Var { get; }
+    public AstType Type { get; }
+
+    public AstParam(AstVar var, AstType type)
+    {
+        Var = var;
+        Type = type;
+    }
 }
 
-public class AstProcedureDecl(string name, List<AstParam> parameters, AstBlock block) : Ast
+public class AstProcedureDecl: Ast
 {
-    public string Name { get; } = name;
-    public List<AstParam> Params = parameters;
-    public AstBlock Block { get; } = block;
+    public string Name { get; }
+    public List<AstParam> Parameters { get; }
+    public AstBlock Block { get; }
+
+    public AstProcedureDecl(string name, List<AstParam> parameters, AstBlock block)
+    {
+        Name = name;
+        Parameters = parameters;
+        Block = block;
+    }
 }
 
-public class AstVarDecl(AstVar varNode, AstType typeNode) : Ast
+public class AstVarDecl : Ast
 {
-    public AstVar VarNode { get; } = varNode;
-    public AstType TypeNode { get; } = typeNode;
+    public AstVar VarNode { get; }
+    public AstType TypeNode { get; }
+
+    public AstVarDecl(AstVar varNode, AstType typeNode)
+    {
+        VarNode = varNode;
+        TypeNode = typeNode;
+    }
 }
 
-public class AstBlock(List<Ast> declarations, AstCompound compound) : Ast
+public class AstBlock : Ast
 {
-    public List<Ast> Declarations { get; } = declarations;
-    public AstCompound Compound { get; } = compound;
+    public List<Ast> Declarations { get; }
+    public AstCompound Compound { get; }
+
+    public AstBlock(List<Ast> declarations, AstCompound compound)
+    {
+        Declarations = declarations;
+        Compound = compound;
+    }
 }
 
-public class AstProgram(string name, AstBlock block) : Ast
+public class AstProgram : Ast
 {
-    public string Name { get; } = name;
-    public AstBlock Block { get; } = block;
+    public string Name { get; }
+    public AstBlock Block { get; }
+
+    public AstProgram(string name, AstBlock block)
+    {
+        Name = name;
+        Block = block;
+    }
 }

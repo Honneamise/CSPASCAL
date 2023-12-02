@@ -10,7 +10,7 @@ public class Interpreter
     public Interpreter(ScopedSymbolTable symtab)
     {
         Symtab = symtab;
-        GlobalScope = [];
+        GlobalScope = new();
 
         foreach (var item in symtab.Symbols)
         {

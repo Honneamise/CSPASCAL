@@ -6,24 +6,28 @@ namespace CSPASCAL;
 public class Program
 {
     const string src = @"
-program Main;
-   var x, y: real;
 
-   procedure Alpha(a : integer);
-      var y : integer;
-   begin
-      x := b + x + y; { ERROR here! }
-   end;
+PROGRAM Main;
 
-begin { Main }
+VAR x, y: REAL;
 
-end.  { Main }";
+
+    PROCEDURE Alpha(a : INTEGER);
+        VAR y : INTEGER;
+        VAR b : REAL;
+
+    BEGIN
+        x := b + x + y;
+    END;
+
+BEGIN { Main }
+
+END.  { Main }";
 
     private static void Main()
     {
         Init.Initialize();
         
-
         Console.WriteLine("********************");
         Console.Write(src + "\n");
 
@@ -34,13 +38,6 @@ end.  { Main }";
         Ast ast = parser.GenerateAst();
 
         ScopedSymbolTable? _ = SemanticAnalyzer.Analyze(ast);
-
-        //Interpreter intp = new(symtab);
-
-        //intp.Execute(ast);
-
-        //Console.WriteLine(intp.ToString());
-
 
     }
 }

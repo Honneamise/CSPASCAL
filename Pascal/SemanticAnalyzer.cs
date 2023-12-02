@@ -40,7 +40,7 @@ public static class SemanticAnalyzer
 
         string procName = node.Name;
 
-        SymbolProcedure procSymbol = new(procName, []);
+        SymbolProcedure procSymbol = new(procName, new());
 
         currentScope.Define(procSymbol);
 
@@ -48,7 +48,7 @@ public static class SemanticAnalyzer
 
         currentScope = procScope;
 
-        foreach(AstParam param in node.Params)
+        foreach(AstParam param in node.Parameters)
         {
             Symbol? paramType = currentScope.Lookup(param.Type.Name) ?? throw new Exception($"{param.Type.Name}:invalid data type");
             
@@ -70,7 +70,7 @@ public static class SemanticAnalyzer
 
     private static void Visit(AstVarDecl node)
     {
-        if (currentScope == null) { throw new Exception("Invalid scoper"); }
+        if (currentScope == null) { throw new Exception("Invalid scope"); }
 
         string typeName = node.TypeNode.Name;
 
@@ -80,7 +80,7 @@ public static class SemanticAnalyzer
 
         Symbol varSymbol = new SymbolVar(varName, typeSymbol);
 
-        //if (currentScope.Lookup(varName) != null) { throw new Exception($"{varName}:duplicated variable name"); }
+        if (currentScope.Lookup(varName, true) != null) { throw new Exception($"{varName}:duplicated variable name"); }
 
         currentScope.Define(varSymbol);
     }

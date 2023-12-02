@@ -1,31 +1,40 @@
-using System.Xml.Linq;
+
+
+using System.Collections.Generic;
 
 namespace Pascal;
 
 
-public class Parser(Lexer lexer)
+public class Parser
 {
-    private readonly Lexer lexer = lexer;
-    private Token currentToken = lexer.NextToken();
+    public Lexer Lexer { get; }
+    public Token CurrentToken { get; set; }  
+
+    public Parser(Lexer lexer)
+    {
+        Lexer = lexer;
+
+        CurrentToken = lexer.NextToken();
+    }
 
     public void Consume(TokenType type)
     {
         //currentToken = (currentToken.Type == type) ? lexer.NextToken() : 
 
-        if (currentToken.Type == type)
+        if (CurrentToken.Type == type)
         { 
-            currentToken = lexer.NextToken();
+            CurrentToken = Lexer.NextToken();
         }
         else
         {
-            throw new Exception($"[{lexer.Line}]Invalid token found expected {type} found {currentToken}");
+            throw new Exception($"[{Lexer.Line}]Invalid token found expected {type} found {CurrentToken}");
         }
     
     }
 
     public Ast Factor()
     {
-        Token token = currentToken;
+        Token token = CurrentToken;
 
         switch (token.Type)
         {
@@ -55,7 +64,7 @@ public class Parser(Lexer lexer)
                 return Variable();
 
             default: 
-                throw new Exception($"[{lexer.Line}]Invalid token type found");
+                throw new Exception($"[{Lexer.Line}]Invalid token type found");
         }
     }
 
@@ -63,9 +72,9 @@ public class Parser(Lexer lexer)
     {
         Ast node = Factor();
 
-        while (currentToken.Type is TokenType.MUL or TokenType.INTEGER_DIV or TokenType.FLOAT_DIV)
+        while (CurrentToken.Type is TokenType.MUL or TokenType.INTEGER_DIV or TokenType.FLOAT_DIV)
         {
-            Token token = currentToken;
+            Token token = CurrentToken;
 
             switch (token.Type)
             {
@@ -82,7 +91,8 @@ public class Parser(Lexer lexer)
                     break;
 
                 default:
-                    throw new Exception($"[{lexer.Line}]Invalid token type found");
+                    throw new Exception($"[{Lexer.Line}]Invalid token type found");
+
             }
 
             node = new AstBinOp(node, token.Type, Factor());
@@ -95,9 +105,9 @@ public class Parser(Lexer lexer)
     {
         Ast node = Term();
 
-        while (currentToken.Type is TokenType.PLUS or TokenType.MINUS)
+        while (CurrentToken.Type is TokenType.PLUS or TokenType.MINUS)
         {
-            Token token = currentToken;
+            Token token = CurrentToken;
 
             switch (token.Type)
             {
@@ -110,7 +120,7 @@ public class Parser(Lexer lexer)
                     break;
 
                 default:
-                    throw new Exception($"[{lexer.Line}]Invalid token type found");
+                    throw new Exception($"[{Lexer.Line}]Invalid token type found");
             }
 
             node = new AstBinOp(node, token.Type, Term());
@@ -132,7 +142,7 @@ public class Parser(Lexer lexer)
 
     public Ast Statement()
     {
-        return currentToken.Type switch
+        return CurrentToken.Type switch
         {
             TokenType.BEGIN => CompoundStatement(),
             TokenType.ID => AssignStatement(),
@@ -142,18 +152,19 @@ public class Parser(Lexer lexer)
 
     public List<Ast> StatementList()
     {
-        List<Ast> list = [ Statement() ];
+        
+        List<Ast> list = new(){ Statement() };
 
-        while (currentToken.Type is TokenType.SEMI)
+        while (CurrentToken.Type is TokenType.SEMI)
         {
             Consume(TokenType.SEMI);
 
             list.Add(Statement());
         }
 
-        if (currentToken.Type is TokenType.ID)
+        if (CurrentToken.Type is TokenType.ID)
         {
-            throw new Exception($"[{lexer.Line}]Unexpected token ID found");
+            throw new Exception($"[{Lexer.Line}]Unexpected token ID found");
         }
 
         return list;
@@ -179,15 +190,15 @@ public class Parser(Lexer lexer)
 
     public List<AstVarDecl> VariableDeclaration()
     {
-        List<AstVar> varNodes = [new AstVar(currentToken.Value)];
-
+        List<AstVar> varNodes = new() { new AstVar(CurrentToken.Value) };
+        
         Consume(TokenType.ID);
 
-        while (currentToken.Type == TokenType.COMMA)
+        while (CurrentToken.Type == TokenType.COMMA)
         {
             Consume(TokenType.COMMA);
 
-            varNodes.Add(new AstVar(currentToken.Value));
+            varNodes.Add(new AstVar(CurrentToken.Value));
 
             Consume(TokenType.ID);
         }
@@ -196,7 +207,7 @@ public class Parser(Lexer lexer)
 
         AstType typeNode = TypeSpec();
 
-        List<AstVarDecl> varDeclarations = [];
+        List<AstVarDecl> varDeclarations = new();
 
         foreach (AstVar node in varNodes)
         {
@@ -208,9 +219,9 @@ public class Parser(Lexer lexer)
 
     AstType TypeSpec()
     {
-        Token token = currentToken;
+        Token token = CurrentToken;
 
-        switch (currentToken.Type)
+        switch (CurrentToken.Type)
         {
             case TokenType.INTEGER:
                 Consume(TokenType.INTEGER);
@@ -221,7 +232,7 @@ public class Parser(Lexer lexer)
                 break;
 
             default:
-                throw new Exception($"[{lexer.Line}]Invalid data type");
+                throw new Exception($"[{Lexer.Line}]Invalid data type");
         }
 
         return new AstType(token.Value);
@@ -229,17 +240,17 @@ public class Parser(Lexer lexer)
 
     public List<AstParam> FormalParameters()
     {
-        List<AstParam> list = [];
+        List<AstParam> list = new();
 
-        List<Token> tokens = [currentToken];
+        List<Token> tokens =  new() { CurrentToken };
 
         Consume(TokenType.ID);
 
-        while(currentToken.Type == TokenType.COMMA) 
+        while(CurrentToken.Type == TokenType.COMMA) 
         {
             Consume(TokenType.COMMA);
 
-            tokens.Add(currentToken);
+            tokens.Add(CurrentToken);
 
             Consume(TokenType.ID);
         }
@@ -262,13 +273,13 @@ public class Parser(Lexer lexer)
 
     public List<AstParam> FormalParameterList() 
     {
-        List<AstParam> list = [];
+        List<AstParam> list = new();
 
-        if(currentToken.Type == TokenType.ID)
+        if(CurrentToken.Type == TokenType.ID)
         {
             List<AstParam> parameters = FormalParameters();
 
-            while(currentToken.Type == TokenType.SEMI)
+            while(CurrentToken.Type == TokenType.SEMI)
             {
                 Consume(TokenType.SEMI);
                 
@@ -283,15 +294,15 @@ public class Parser(Lexer lexer)
 
     public List<Ast> Declarations()
     {
-        List<Ast> declarations = [];
+        List<Ast> declarations = new();
 
         while (true)
         {
-            if (currentToken.Type == TokenType.VAR)//variables
+            if (CurrentToken.Type == TokenType.VAR)//variables
             {
                 Consume(TokenType.VAR);
 
-                while (currentToken.Type == TokenType.ID)
+                while (CurrentToken.Type == TokenType.ID)
                 {
                     List<AstVarDecl> list = VariableDeclaration();
 
@@ -300,17 +311,17 @@ public class Parser(Lexer lexer)
                     Consume(TokenType.SEMI);
                 }
             }
-            else if (currentToken.Type == TokenType.PROCEDURE)//procedures
+            else if (CurrentToken.Type == TokenType.PROCEDURE)//procedures
             {
                 Consume(TokenType.PROCEDURE);
 
-                string name = currentToken.Value;
+                string name = CurrentToken.Value;
 
                 Consume(TokenType.ID);
 
-                List<AstParam> parameters = [];
+                List<AstParam> parameters = new();
 
-                if(currentToken.Type == TokenType.LPAREN) 
+                if(CurrentToken.Type == TokenType.LPAREN) 
                 {
                     Consume(TokenType.LPAREN);
 
@@ -348,7 +359,7 @@ public class Parser(Lexer lexer)
 
     public AstVar Variable()
     {
-        AstVar node = new(currentToken.Value);
+        AstVar node = new(CurrentToken.Value);
 
         Consume(TokenType.ID);
 
@@ -371,9 +382,9 @@ public class Parser(Lexer lexer)
 
         Consume(TokenType.DOT);
 
-        if (currentToken.Type is not TokenType.EOF)
+        if (CurrentToken.Type is not TokenType.EOF)
         {
-            throw new Exception($"[{lexer.Line}]Parsing error");
+            throw new Exception($"[{Lexer.Line}]Parsing error");
         }
 
         return programNode;
@@ -381,10 +392,6 @@ public class Parser(Lexer lexer)
 
     public Ast GenerateAst()
     {
-        lexer.Reset();
-        
-        currentToken = lexer.NextToken();
-        
         return Program();
     }
 }

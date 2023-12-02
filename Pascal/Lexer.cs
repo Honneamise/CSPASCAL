@@ -1,53 +1,81 @@
+using System.Data.Common;
+using System;
+using static System.Net.Mime.MediaTypeNames;
+
 namespace Pascal;
 
 
 public class Lexer
 {
-    private static readonly Dictionary<string, Token> Keywords = new()
+    private static readonly Dictionary<string, TokenType> Keywords = new()
     {
-        ["program"] = new Token(TokenType.PROGRAM, "program"),
-        ["var"] = new Token(TokenType.VAR, "var"),
-        ["procedure"] = new Token(TokenType.PROCEDURE, "procedure"),
-        ["begin"] = new Token(TokenType.BEGIN, "begin"),
-        ["end"] = new Token(TokenType.END, "end"),
-        ["integer"] = new Token(TokenType.INTEGER, "integer"),
-        ["real"] = new Token(TokenType.REAL, "real"),
-        ["div"] = new Token(TokenType.INTEGER_DIV, "div"),
+        //reserved keywords
+        ["PROGRAM"]     = TokenType.PROGRAM,
+        ["INTEGER"]     = TokenType.INTEGER,
+        ["REAL"]        = TokenType.REAL,
+        ["DIV"]         = TokenType.INTEGER_DIV,
+        ["VAR"]         = TokenType.VAR,
+        ["PROCEDURE"]   = TokenType.PROCEDURE,
+        ["BEGIN"]       = TokenType.BEGIN,
+        ["END"]         = TokenType.END,
+
+        //single char tokens
+        ["+"] = TokenType.PLUS,
+        ["-"] = TokenType.MINUS,
+        ["*"] = TokenType.MUL,
+        ["/"] = TokenType.FLOAT_DIV,
+        ["("] = TokenType.LPAREN,
+        [")"] = TokenType.RPAREN,
+        [";"] = TokenType.SEMI,
+        ["."] = TokenType.DOT,
+        [":"] = TokenType.COLON,
+        [","] = TokenType.COMMA,
+
+        //misc
+        [":="] = TokenType.ASSIGN
+     
     };
 
     private readonly string text;
     private int pos;
     private char currentChar;
     public int Line { get; set; }
+    public int Col { get; set; }
 
     public Lexer(string txt)
     {
         text = txt;
-        Line = 1;
         pos = 0;
         currentChar = text[pos];
+        Line = 1;
+        Col = 1;
     }
 
-    public void Reset()
+    public void Error()
     {
-        Line = 1;
-        pos = 0;
-        currentChar = text[pos];
+        string s = $"Lexer error on '{currentChar}' line: {Line} column: {Col}";
+
+        throw new LexerError(msg:s);
     }
 
     public void Advance()
     {
+        if(currentChar == '\n') 
+        {
+            Line++;
+            Col = 0;
+        }
+        
         pos++;
 
-        if (pos < text.Length)
+        if(pos >= text.Length)
         {
-            if (text[pos] == '\n') { Line++; }
-
-            currentChar = text[pos];
+            currentChar = default;
         }
         else
-        { 
-            currentChar = default; 
+        {
+            currentChar = text[pos];
+            Col++;
         }
     }
 
@@ -97,12 +125,12 @@ public class Lexer
                 Advance();
             }
             
-            return new Token(TokenType.REAL_CONST, str);
+            return new (TokenType.REAL_CONST, str, Line, Col);
 
         }
         else
         {
-            return new Token(TokenType.INTEGER_CONST, str);
+            return new (TokenType.INTEGER_CONST, str, Line, Col);
         }
     }
 
@@ -116,7 +144,12 @@ public class Lexer
             Advance();
         }
 
-        return Keywords.TryGetValue(str, out Token? value) ? value : new Token(TokenType.ID, str);
+        if(Keywords.TryGetValue(str.ToUpper(), out var type))
+        {
+            return new (type, str.ToUpper(), Line, Col);
+        }
+
+        return new (TokenType.ID, str, Line, Col);
     }
 
     public Token NextToken()
@@ -138,67 +171,33 @@ public class Lexer
                 return Id();
             }
 
-            switch (currentChar)
+            if(currentChar.Equals('{'))
             {
-                case '{':
-                    Advance();
-                    SkipComment();
-                    break;
-
-                case ':':
-                    if(Peek()=='=')
-                    {
-                        Advance();
-                        Advance();
-                        return new Token(TokenType.ASSIGN, ":=");
-                    }
-                    else
-                    {
-                        Advance();
-                        return new Token(TokenType.COLON, ':');
-                    }
-
-                case ',':
-                    Advance();
-                    return new Token(TokenType.COMMA, ',');
-
-                case ';':
-                    Advance();
-                    return new Token(TokenType.SEMI, ';');
-
-                case '.':
-                    Advance();
-                    return new Token(TokenType.DOT, '.');
-
-                case '+':
-                    Advance();
-                    return new Token(TokenType.PLUS, '+');
-
-                case '-':
-                    Advance();
-                    return new Token(TokenType.MINUS, '-');
-
-                case '*':
-                    Advance();
-                    return new Token(TokenType.MUL, '*');
-
-                case '/' :
-                    Advance();
-                    return new Token(TokenType.FLOAT_DIV, '/');
-
-                case '(':
-                    Advance();
-                    return new Token(TokenType.LPAREN, '(');
-
-                case ')':
-                    Advance();
-                    return new Token(TokenType.RPAREN, ')');
-
-                default:
-                    throw new Exception($"[{Line}]Invalid character found:{currentChar}");
+                Advance();
+                SkipComment();
+                continue;
             }
+
+            if (currentChar.Equals(':') && Peek()=='=')
+            {
+                Token t = new (TokenType.ASSIGN, ":=", Line, Col);
+                Advance();
+                Advance();
+                return t;
+            }
+
+
+            if (Keywords.TryGetValue(currentChar.ToString(), out TokenType type))
+            {
+                Token t = new (type, currentChar.ToString(), Line, Col);
+                Advance();
+                return t;
+            }
+            
+            Error(); 
+            
         }
 
-        return new Token(TokenType.EOF, 0);
+        return new Token(TokenType.EOF, "", Line, Col);
     }
 }

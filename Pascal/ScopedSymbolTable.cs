@@ -12,34 +12,28 @@ public class ScopedSymbolTable
     {
         Name = name;
         Level = level;
-        Symbols = [];
+        Symbols = new();
         Enclosing = enclosing;
 
         //inititialize builtin types
-        Define(new Symbol("integer"));
-        Define(new Symbol("real"));
+        Define(new Symbol("INTEGER"));
+        Define(new Symbol("REAL"));
     }
 
     public void Define(Symbol symbol)
     {
-        //Console.WriteLine($"Define : {symbol.Name}");
-
         Symbols[symbol.Name] = symbol;
     }
 
-    public Symbol? Lookup(string name)
+    public Symbol? Lookup(string name, bool limit = false)
     {
-        //Console.WriteLine($"Lookup : {name}");
-
         if (Symbols.TryGetValue(name, out Symbol? symbol)) { return symbol; }
-        else if (Enclosing != null)
-        {
-            return Enclosing.Lookup(name);
-        }
-        else
-        {
-            return null;
-        }
+
+        if (limit) {  return null; }
+        
+        if (Enclosing == null) {  return null; }
+
+        return Enclosing.Lookup(name);
 
     }
 

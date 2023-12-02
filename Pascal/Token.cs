@@ -3,40 +3,55 @@ namespace Pascal;
 
 public enum TokenType
 {
+    //keywords
+    PROGRAM,
     INTEGER,
-    INTEGER_CONST,
     REAL,
-    REAL_CONST,
+    INTEGER_DIV,
+    VAR,
+    PROCEDURE,
+    BEGIN,
+    END,
 
     PLUS,
     MINUS,
     MUL,
-    INTEGER_DIV,
     FLOAT_DIV,
-
-    PROGRAM,
-    PROCEDURE,
-    VAR,
-    BEGIN,
-    END,
-    ASSIGN,
-    ID,
-
     LPAREN,
     RPAREN,
     SEMI,
+    DOT,
     COLON,
     COMMA,
-    DOT,
 
-    EOF
+    //misc
+    ASSIGN,
+    EOF,
+
+    ID,
+    INTEGER_CONST,
+    REAL_CONST 
 };
 
 
-public class Token(TokenType type, dynamic value)
+public class Token
 {
-    public TokenType Type { get; } = type;
-    public dynamic Value { get; } = value;
+    public TokenType Type { get; }
+    public string Value { get; }
+    public int Line { get; set; }
+    public int Col { get; set; }
 
-    public override string ToString() => $"<{Type}:{Value}>";
+    public Token(TokenType type, string value, int line = -1, int col = -1)
+    {
+        Type = type;
+        Value = value;
+        Line = line;
+        Col = col;
+    }
+
+
+    public override string ToString()
+    {
+        return $"<{Type}:{Value} {Line}:{Col}>";
+    }
 }
