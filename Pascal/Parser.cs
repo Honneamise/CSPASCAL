@@ -17,17 +17,22 @@ public class Parser
         CurrentToken = lexer.NextToken();
     }
 
+    public void Error(ErrorCode code)
+    {
+        string s = $"[Parser error : {code}] {CurrentToken}";
+
+        throw new ParserError(code, CurrentToken, s);
+    }
+
     public void Consume(TokenType type)
     {
-        //currentToken = (currentToken.Type == type) ? lexer.NextToken() : 
-
         if (CurrentToken.Type == type)
         { 
             CurrentToken = Lexer.NextToken();
         }
         else
         {
-            throw new Exception($"[{Lexer.Line}]Invalid token found expected {type} found {CurrentToken}");
+            Error(ErrorCode.UNEXPECTED_TOKEN);
         }
     
     }
@@ -60,11 +65,8 @@ public class Parser
                 Consume(TokenType.RPAREN);
                 return node;
 
-            case TokenType.ID:
+            default:
                 return Variable();
-
-            default: 
-                throw new Exception($"[{Lexer.Line}]Invalid token type found");
         }
     }
 
@@ -91,7 +93,7 @@ public class Parser
                     break;
 
                 default:
-                    throw new Exception($"[{Lexer.Line}]Invalid token type found");
+                    break;
 
             }
 
@@ -120,7 +122,7 @@ public class Parser
                     break;
 
                 default:
-                    throw new Exception($"[{Lexer.Line}]Invalid token type found");
+                    break;
             }
 
             node = new AstBinOp(node, token.Type, Term());
@@ -160,11 +162,6 @@ public class Parser
             Consume(TokenType.SEMI);
 
             list.Add(Statement());
-        }
-
-        if (CurrentToken.Type is TokenType.ID)
-        {
-            throw new Exception($"[{Lexer.Line}]Unexpected token ID found");
         }
 
         return list;
@@ -232,7 +229,7 @@ public class Parser
                 break;
 
             default:
-                throw new Exception($"[{Lexer.Line}]Invalid data type");
+                break;
         }
 
         return new AstType(token.Value);
@@ -296,56 +293,58 @@ public class Parser
     {
         List<Ast> declarations = new();
 
-        while (true)
+        if (CurrentToken.Type == TokenType.VAR)
         {
-            if (CurrentToken.Type == TokenType.VAR)//variables
+            Consume(TokenType.VAR);
+
+            while (CurrentToken.Type == TokenType.ID)
             {
-                Consume(TokenType.VAR);
+                List<AstVarDecl> list = VariableDeclaration();
 
-                while (CurrentToken.Type == TokenType.ID)
-                {
-                    List<AstVarDecl> list = VariableDeclaration();
-
-                    declarations = new(declarations.Concat(list));
-
-                    Consume(TokenType.SEMI);
-                }
-            }
-            else if (CurrentToken.Type == TokenType.PROCEDURE)//procedures
-            {
-                Consume(TokenType.PROCEDURE);
-
-                string name = CurrentToken.Value;
-
-                Consume(TokenType.ID);
-
-                List<AstParam> parameters = new();
-
-                if(CurrentToken.Type == TokenType.LPAREN) 
-                {
-                    Consume(TokenType.LPAREN);
-
-                    parameters = FormalParameterList();
-
-                    Consume(TokenType.RPAREN);
-                }
+                declarations = new(declarations.Concat(list));
 
                 Consume(TokenType.SEMI);
-
-                AstBlock block = Block();
-
-                AstProcedureDecl node = new(name, parameters, block);
-
-                declarations.Add(node);
-
-                Consume(TokenType.SEMI);
-            }
-            else
-            {
-                break;
             }
         }
-        return declarations;
+
+        while (CurrentToken.Type == TokenType.PROCEDURE)
+        {
+            AstProcedureDecl decl = ProcedureDeclaration();
+
+            declarations.Add(decl);
+        }   
+
+        return declarations;    
+    }
+
+    public AstProcedureDecl ProcedureDeclaration()
+    {
+        Consume(TokenType.PROCEDURE);
+
+        string name = CurrentToken.Value;
+
+        Consume(TokenType.ID);
+
+        List<AstParam> parameters = new();
+
+        if (CurrentToken.Type == TokenType.LPAREN)
+        {
+            Consume(TokenType.LPAREN);
+
+            parameters = FormalParameterList();
+
+            Consume(TokenType.RPAREN);
+        }
+
+        Consume(TokenType.SEMI);
+
+        AstBlock block = Block();
+
+        AstProcedureDecl decl = new(name, parameters, block);
+
+        Consume(TokenType.SEMI);
+
+        return decl;
     }
 
     public AstBlock Block()
@@ -381,11 +380,6 @@ public class Parser
         AstProgram programNode = new(progName, blockNode);
 
         Consume(TokenType.DOT);
-
-        if (CurrentToken.Type is not TokenType.EOF)
-        {
-            throw new Exception($"[{Lexer.Line}]Parsing error");
-        }
 
         return programNode;
     }

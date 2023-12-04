@@ -53,7 +53,7 @@ public class Lexer
 
     public void Error()
     {
-        string s = $"Lexer error on '{currentChar}' line: {Line} column: {Col}";
+        string s = $"[Lexer error] '{currentChar}' line: {Line} column: {Col}";
 
         throw new LexerError(msg:s);
     }

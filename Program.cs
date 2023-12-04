@@ -5,30 +5,12 @@ namespace CSPASCAL;
 
 public class Program
 {
-    const string src = @"
-
-PROGRAM Main;
-
-VAR x, y: REAL;
-
-
-    PROCEDURE Alpha(a : INTEGER);
-        VAR y : INTEGER;
-        VAR b : REAL;
-
-    BEGIN
-        x := b + x + y;
-    END;
-
-BEGIN { Main }
-
-END.  { Main }";
-
     private static void Main()
     {
         Init.Initialize();
-        
-        Console.WriteLine("********************");
+
+        string src = File.ReadAllText("input.txt");
+
         Console.Write(src + "\n");
 
         Lexer lexer = new(src);
@@ -36,6 +18,8 @@ END.  { Main }";
         Parser parser = new(lexer);
 
         Ast ast = parser.GenerateAst();
+
+        Console.WriteLine("********************");
 
         ScopedSymbolTable? _ = SemanticAnalyzer.Analyze(ast);
 

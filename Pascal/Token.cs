@@ -52,6 +52,6 @@ public class Token
 
     public override string ToString()
     {
-        return $"<{Type}:{Value} {Line}:{Col}>";
+        return $"<{Type}>:'{Value}' line:{Line} column:{Col}";
     }
 }
