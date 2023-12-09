@@ -1,20 +1,8 @@
 PROGRAM Main;
+VAR x : INTEGER;
 
-VAR 
-x, y: REAL;
-z: INTEGER;
+BEGIN
 
-    PROCEDURE Pippo(a : INTEGER);
+x := 2;
 
-    VAR 
-    y : INTEGER;
-    b : REAL;
-    c : INTEGER;
-
-    BEGIN
-        x := 1234;
-    END;
-
-BEGIN { Main }
-
-END  { Main }
+END.  { Main }

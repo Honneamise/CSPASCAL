@@ -38,29 +38,29 @@ public class Lexer
 
     private readonly string text;
     private int pos;
-    private char currentChar;
-    public int Line { get; set; }
-    public int Col { get; set; }
+    public char CurrentChar {  get; private set; }
+    public int Line { get; private set; }
+    public int Col { get; private set; }
 
     public Lexer(string txt)
     {
         text = txt;
         pos = 0;
-        currentChar = text[pos];
+        CurrentChar = text[pos];
         Line = 1;
         Col = 1;
     }
 
     public void Error()
     {
-        string s = $"[Lexer error] '{currentChar}' line: {Line} column: {Col}";
+        string s = $"[Lexer error] '{CurrentChar}' line: {Line} column: {Col}";
 
         throw new LexerError(msg:s);
     }
 
     public void Advance()
     {
-        if(currentChar == '\n') 
+        if(CurrentChar == '\n') 
         {
             Line++;
             Col = 0;
@@ -70,11 +70,11 @@ public class Lexer
 
         if(pos >= text.Length)
         {
-            currentChar = default;
+            CurrentChar = default;
         }
         else
         {
-            currentChar = text[pos];
+            CurrentChar = text[pos];
             Col++;
         }
     }
@@ -88,7 +88,7 @@ public class Lexer
 
     public void SkipWhiteSpaces()
     {
-        while (currentChar != default && char.IsWhiteSpace(currentChar))
+        while (CurrentChar != default && char.IsWhiteSpace(CurrentChar))
         {
             Advance();
         }
@@ -96,7 +96,7 @@ public class Lexer
 
     public void SkipComment()
     {
-        while (currentChar != '}')
+        while (CurrentChar != '}')
         {
             Advance();
         }
@@ -108,20 +108,20 @@ public class Lexer
     {
         string str = "";
 
-        while (currentChar != default && char.IsDigit(currentChar))
+        while (CurrentChar != default && char.IsDigit(CurrentChar))
         {
-            str += currentChar;
+            str += CurrentChar;
             Advance();
         }
 
-        if (currentChar == '.')
+        if (CurrentChar == '.')
         {
-            str += currentChar;
+            str += CurrentChar;
             Advance();
 
-            while (currentChar != default && char.IsDigit(currentChar))
+            while (CurrentChar != default && char.IsDigit(CurrentChar))
             {
-                str += currentChar;
+                str += CurrentChar;
                 Advance();
             }
             
@@ -138,9 +138,9 @@ public class Lexer
     {
         string str = "";
 
-        while (currentChar != default && char.IsLetterOrDigit(currentChar))
+        while (CurrentChar != default && char.IsLetterOrDigit(CurrentChar))
         {
-            str += currentChar;
+            str += CurrentChar;
             Advance();
         }
 
@@ -154,31 +154,31 @@ public class Lexer
 
     public Token NextToken()
     {
-        while (currentChar != default)
+        while (CurrentChar != default)
         {
-            if (char.IsWhiteSpace(currentChar))
+            if (char.IsWhiteSpace(CurrentChar))
             {
                 SkipWhiteSpaces();
             }
 
-            if (char.IsDigit(currentChar))
+            if (char.IsDigit(CurrentChar))
             {
                 return Number();
             }
 
-            if (char.IsLetter(currentChar))
+            if (char.IsLetter(CurrentChar))
             {
                 return Id();
             }
 
-            if(currentChar.Equals('{'))
+            if(CurrentChar.Equals('{'))
             {
                 Advance();
                 SkipComment();
                 continue;
             }
 
-            if (currentChar.Equals(':') && Peek()=='=')
+            if (CurrentChar.Equals(':') && Peek()=='=')
             {
                 Token t = new (TokenType.ASSIGN, ":=", Line, Col);
                 Advance();
@@ -187,9 +187,9 @@ public class Lexer
             }
 
 
-            if (Keywords.TryGetValue(currentChar.ToString(), out TokenType type))
+            if (Keywords.TryGetValue(CurrentChar.ToString(), out TokenType type))
             {
-                Token t = new (type, currentChar.ToString(), Line, Col);
+                Token t = new (type, CurrentChar.ToString(), Line, Col);
                 Advance();
                 return t;
             }

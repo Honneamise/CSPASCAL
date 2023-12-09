@@ -7,7 +7,7 @@ public class Program
 {
     private static void Main()
     {
-        Init.Initialize();
+        Init.Initialize(true);
 
         string src = File.ReadAllText("input.txt");
 
@@ -21,7 +21,12 @@ public class Program
 
         Console.WriteLine("********************");
 
-        ScopedSymbolTable? _ = SemanticAnalyzer.Analyze(ast);
+        SemanticAnalyzer analyzer = new(ast);
 
+        analyzer.Analyze();
+
+        Interpreter intp = new(ast);
+
+        intp.Execute();
     }
 }

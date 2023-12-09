@@ -10,34 +10,52 @@ public class AstEmpty : Ast { }
 
 public class AstNum : Ast
 {
+    public Token Token { get; }
     public string StrValue { get; }
     public int IntValue { get => int.Parse(StrValue); }
     public float FloatValue { get => float.Parse(StrValue); }
 
-    public AstNum(string str)
+    public AstNum(Token token)
     {
-        StrValue = str;
+        Token = token;
+        StrValue = token.Value;
     }
 }
 
 public class AstVar : Ast
 {
+    public Token Token { get; }
     public string Name { get; }
 
-    public AstVar(string name) 
+    public AstVar(Token token) 
     { 
-        Name = name;
+        Token = token;
+        Name = token.Value;
+    }
+}
+
+public class AstVarDecl : Ast
+{
+    public AstVar VarNode { get; }
+    public AstType TypeNode { get; }
+
+    public AstVarDecl(AstVar varNode, AstType typeNode)
+    {
+        VarNode = varNode;
+        TypeNode = typeNode;
     }
 }
 
 public class AstUnaryOp : Ast
 {
     public Ast Expr { get; }
-    public TokenType Op { get; }
+    public Token Token { get; }
+    public Token Op { get; }
 
-    public AstUnaryOp(TokenType op, Ast expr)
+    public AstUnaryOp(Token token, Ast expr)
     {
-        Op = op;
+        Token = token;
+        Op = token;
         Expr = expr;
     }
 }
@@ -45,13 +63,15 @@ public class AstUnaryOp : Ast
 public class AstBinOp : Ast
 {
     public Ast Left { get; }
-    public TokenType Op { get; }
+    public Token Token { get; }
+    public Token Op { get; }
     public Ast Right { get; }
 
-    public AstBinOp(Ast left, TokenType op, Ast right)
+    public AstBinOp(Ast left, Token token, Ast right)
     {
         Left = left;
-        Op = op;
+        Token = token;
+        Op = token;
         Right = right;
     }
 }
@@ -59,11 +79,15 @@ public class AstBinOp : Ast
 public class AstAssign : Ast
 {
     public AstVar Left { get; }
+    public Token Token { get; }
+    public Token Op { get; }
     public Ast Right { get; }
 
-    public AstAssign(AstVar left, Ast right)
+    public AstAssign(AstVar left, Token token, Ast right)
     {
         Left = left;
+        Token = token;
+        Op = token;
         Right = right;
     }
 }
@@ -80,11 +104,13 @@ public class AstCompound : Ast
 
 public class AstType : Ast
 {
+    public Token Token { get; }
     public string Name { get; }
 
-    public AstType(string name)
+    public AstType(Token token)
     {
-        Name=name;
+        Token = token;
+        Name = token.Value;
     }
 }
 
@@ -97,6 +123,20 @@ public class AstParam : Ast
     {
         Var = var;
         Type = type;
+    }
+}
+
+public class AstProcedureCall: Ast
+{
+    public string Name { get; } 
+    public List<Ast> Nodes { get; }
+    public Token Token { get; }
+
+    public AstProcedureCall(string name, List<Ast> nodes, Token token)
+    {
+        Name = name;
+        Nodes = nodes;
+        Token = token;
     }
 }
 
@@ -114,17 +154,6 @@ public class AstProcedureDecl: Ast
     }
 }
 
-public class AstVarDecl : Ast
-{
-    public AstVar VarNode { get; }
-    public AstType TypeNode { get; }
-
-    public AstVarDecl(AstVar varNode, AstType typeNode)
-    {
-        VarNode = varNode;
-        TypeNode = typeNode;
-    }
-}
 
 public class AstBlock : Ast
 {

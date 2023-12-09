@@ -45,19 +45,19 @@ public class Parser
         {
             case TokenType.PLUS:
                 Consume(TokenType.PLUS);
-                return new AstUnaryOp(TokenType.PLUS, Factor());
+                return new AstUnaryOp(token, Factor());
 
             case TokenType.MINUS:
                 Consume(TokenType.MINUS);
-                return new AstUnaryOp(TokenType.MINUS, Factor());
+                return new AstUnaryOp(token, Factor());
 
             case TokenType.INTEGER_CONST:
                 Consume(TokenType.INTEGER_CONST);
-                return new AstNum(token.Value);
+                return new AstNum(token);
 
             case TokenType.REAL_CONST:
                 Consume(TokenType.REAL_CONST);
-                return new AstNum(token.Value);
+                return new AstNum(token);
 
             case TokenType.LPAREN:
                 Consume(TokenType.LPAREN);
@@ -97,7 +97,7 @@ public class Parser
 
             }
 
-            node = new AstBinOp(node, token.Type, Factor());
+            node = new AstBinOp(node, token, Factor());
         }
 
         return node;
@@ -125,7 +125,7 @@ public class Parser
                     break;
             }
 
-            node = new AstBinOp(node, token.Type, Term());
+            node = new AstBinOp(node, token, Term());
         }
 
         return node;
@@ -139,16 +139,20 @@ public class Parser
 
         Ast right = Expr();
 
-        return new AstAssign(left, right); ;
+        return new AstAssign(left, CurrentToken, right); ;
     }
 
     public Ast Statement()
     {
-        return CurrentToken.Type switch
+        switch (CurrentToken.Type)
         {
-            TokenType.BEGIN => CompoundStatement(),
-            TokenType.ID => AssignStatement(),
-            _ => new AstEmpty()
+            case TokenType.BEGIN: return CompoundStatement();
+
+            case TokenType.ID:
+                if (Lexer.CurrentChar == '(') { return CallStatement(); }
+                else { return AssignStatement(); }
+
+            default: return new AstEmpty();
         };
     }
 
@@ -185,9 +189,39 @@ public class Parser
         return root;
     }
 
+    public AstProcedureCall CallStatement()
+    {
+        Token token = CurrentToken;
+
+        string procName = token.Value;
+
+        Consume(TokenType.ID);
+
+        Consume(TokenType.LPAREN);
+
+        List<Ast> parameters = new();
+
+        if(CurrentToken.Type != TokenType.RPAREN)
+        {
+            Ast node = Expr();
+            parameters.Add(node);   
+        }
+
+        while(CurrentToken.Type == TokenType.COMMA) 
+        {
+            Consume(TokenType.COMMA);
+            Ast node = Expr();
+            parameters.Add(node);
+        }
+
+        Consume(TokenType.RPAREN);
+
+        return new AstProcedureCall(procName, parameters, token);
+    }
+
     public List<AstVarDecl> VariableDeclaration()
     {
-        List<AstVar> varNodes = new() { new AstVar(CurrentToken.Value) };
+        List<AstVar> varNodes = new() { new AstVar(CurrentToken) };
         
         Consume(TokenType.ID);
 
@@ -195,7 +229,7 @@ public class Parser
         {
             Consume(TokenType.COMMA);
 
-            varNodes.Add(new AstVar(CurrentToken.Value));
+            varNodes.Add(new AstVar(CurrentToken));
 
             Consume(TokenType.ID);
         }
@@ -232,7 +266,7 @@ public class Parser
                 break;
         }
 
-        return new AstType(token.Value);
+        return new AstType(token);
     }
 
     public List<AstParam> FormalParameters()
@@ -258,7 +292,7 @@ public class Parser
 
         foreach(Token token in tokens) 
         {
-            AstVar v = new(token.Value);
+            AstVar v = new(token);
 
             AstParam p = new(v, type);
 
@@ -358,7 +392,7 @@ public class Parser
 
     public AstVar Variable()
     {
-        AstVar node = new(CurrentToken.Value);
+        AstVar node = new(CurrentToken);
 
         Consume(TokenType.ID);
 

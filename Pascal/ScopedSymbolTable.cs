@@ -1,4 +1,6 @@
-﻿namespace Pascal;
+﻿using System.Reflection.Metadata.Ecma335;
+
+namespace Pascal;
 
 
 public class ScopedSymbolTable
@@ -20,13 +22,24 @@ public class ScopedSymbolTable
         Define(new Symbol("REAL"));
     }
 
+    public void Log(string msg) 
+    { 
+        if(Init.LogEnabled)
+        {
+            Console.WriteLine(msg);
+        }
+    }
+
     public void Define(Symbol symbol)
     {
+        Log($"Defining({Name}): {symbol.Name}");
         Symbols[symbol.Name] = symbol;
     }
 
     public Symbol? Lookup(string name, bool limit = false)
     {
+        Log($"Lookup({Name}): {name}");
+
         if (Symbols.TryGetValue(name, out Symbol? symbol)) { return symbol; }
 
         if (limit) {  return null; }
@@ -34,17 +47,18 @@ public class ScopedSymbolTable
         if (Enclosing == null) {  return null; }
 
         return Enclosing.Lookup(name);
-
     }
 
     public override string ToString()
     {
-        string str = $"TABLE:{Name}\nLEVEL:{Level}\nENCLOSING:{Enclosing?.Name}\n";
+        string str = $"***\nTABLE:{Name}\nLEVEL:{Level}\nENCLOSING:{Enclosing?.Name}";
 
         foreach (var item in Symbols)
         {
-            str += item.Value.ToString() + "\n";
+            str += "\n" + item.Value.ToString();
         }
+
+        str += "\n***";
 
         return str;
     }

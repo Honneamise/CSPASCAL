@@ -1,32 +1,83 @@
 ﻿namespace Pascal;
 
 
-public static class SemanticAnalyzer
+public class SemanticAnalyzer
 {
-    private static ScopedSymbolTable? currentScope = null;
+    Ast ast;
+    ScopedSymbolTable? currentScope = null;
 
-    private static void Visit(AstVar node)
+    public SemanticAnalyzer(Ast a)
     {
-        if (currentScope == null) { throw new Exception("Invalid scope"); }
-        
-        string varName = node.Name;
-        
-        _ = currentScope.Lookup(varName) ?? throw new Exception($"{varName}:undeclared variable");
+        ast = a;
     }
 
-    private static void Visit(AstBinOp node)
+    public void Error(ErrorCode code, Token token)
+    {
+        string s = $"[Semantic error : {code}] {token}";
+
+        throw new SemanticError(code, token, s);
+    }
+
+    public void Log(string msg)
+    {
+        if (Init.LogEnabled)
+        {
+            Console.WriteLine(msg);
+        }
+    }
+
+    private void Visit(AstVar node)
+    {
+        if (currentScope != null)
+        {
+            string varName = node.Name;
+
+            Symbol? varSymbol = currentScope.Lookup(varName);
+        
+            if(varSymbol==null)
+            {
+                Error(ErrorCode.ID_NOT_FOUND, node.Token);
+            }
+        }
+    }
+
+    private void Visit(AstVarDecl node)
+    {
+        if (currentScope != null)
+        {
+            string typeName = node.TypeNode.Name;
+
+            Symbol? typeSymbol = currentScope.Lookup(typeName);
+
+            if (typeSymbol != null)
+            {
+                string varName = node.VarNode.Name;
+
+                Symbol varSymbol = new SymbolVar(varName, typeSymbol);
+
+                if (currentScope.Lookup(varName, true) != null)
+                {
+                    Error(ErrorCode.DUPLICATE_ID, node.VarNode.Token);
+                }
+
+                currentScope.Define(varSymbol);
+            }
+        }
+    }
+
+    private void Visit(AstBinOp node)
     {
         Visit(node.Left);
         Visit(node.Right);
     }
 
-    private static void Visit(AstAssign node)
+    private void Visit(AstAssign node)
     {
         Visit(node.Right);
         Visit(node.Left);
     }
     
-    private static void Visit(AstCompound node)
+    private void Visit(AstCompound node)
     {
         foreach (Ast n in node.Nodes)
         {
@@ -34,58 +85,54 @@ public static class SemanticAnalyzer
         }
     }
 
-    private static void Visit(AstProcedureDecl node)
+    private void Visit(AstProcedureCall node)
     {
-        if (currentScope == null) { throw new Exception("Invalid scope"); }
-
-        string procName = node.Name;
-
-        SymbolProcedure procSymbol = new(procName, new());
-
-        currentScope.Define(procSymbol);
-
-        ScopedSymbolTable procScope = new(procName, currentScope.Level + 1, currentScope);
-
-        currentScope = procScope;
-
-        foreach(AstParam param in node.Parameters)
+        foreach(Ast n in node.Nodes)
         {
-            Symbol? paramType = currentScope.Lookup(param.Type.Name) ?? throw new Exception($"{param.Type.Name}:invalid data type");
-            
-            string paramName = param.Var.Name;
-
-            SymbolVar varSymbol = new(paramName, paramType);    
-
-            currentScope.Define(varSymbol);
-
-            procSymbol.Parameters.Add(varSymbol);
+            Visit(n);
         }
-
-        Visit(node.Block);
-
-        Console.WriteLine(procScope.ToString());
-
-        currentScope = currentScope.Enclosing;
     }
 
-    private static void Visit(AstVarDecl node)
+    private void Visit(AstProcedureDecl node)
     {
-        if (currentScope == null) { throw new Exception("Invalid scope"); }
+        if (currentScope != null)
+        {
+            Log("---Entering scope: " + node.Name);
 
-        string typeName = node.TypeNode.Name;
+            string procName = node.Name;
 
-        Symbol typeSymbol = currentScope.Lookup(typeName) ?? throw new Exception($"{typeName}:invalid datatype");
+            SymbolProcedure procSymbol = new(procName, new());
 
-        string varName = node.VarNode.Name;
+            currentScope.Define(procSymbol);
 
-        Symbol varSymbol = new SymbolVar(varName, typeSymbol);
+            ScopedSymbolTable procScope = new(procName, currentScope.Level + 1, currentScope);
 
-        if (currentScope.Lookup(varName, true) != null) { throw new Exception($"{varName}:duplicated variable name"); }
+            currentScope = procScope;
 
-        currentScope.Define(varSymbol);
+            foreach (AstParam param in node.Parameters)
+            {
+                Symbol? paramType = currentScope.Lookup(param.Type.Name) ?? throw new Exception($"{param.Type.Name}:invalid data type");
+
+                string paramName = param.Var.Name;
+
+                SymbolVar varSymbol = new(paramName, paramType);
+
+                currentScope.Define(varSymbol);
+
+                procSymbol.Parameters.Add(varSymbol);
+            }
+
+            Visit(node.Block);
+
+            Log(procScope.ToString());
+
+            currentScope = currentScope.Enclosing;
+
+            Log("---Leaving scope: " + node.Name);
+        }
     }
 
-    private static void Visit(AstBlock node)
+    private void Visit(AstBlock node)
     {
         foreach (Ast ast in node.Declarations)
         {
@@ -95,45 +142,48 @@ public static class SemanticAnalyzer
         Visit(node.Compound);
     }
 
-    private static void Visit(AstProgram node)
+    private void Visit(AstProgram node)
     {
+        Log("---Entering scope: GLOBAL");
+
         ScopedSymbolTable globalScope = new("GLOBAL", 1, currentScope);
 
         currentScope = globalScope;
 
         Visit(node.Block);
 
-        Console.WriteLine(globalScope.ToString());
+        Log(globalScope.ToString());
 
         currentScope = currentScope.Enclosing;
+
+        Log("---Leaving scope: GLOBAL");
     }
 
-    private static void Visit(Ast node)
+    private void Visit(Ast node)
     {
         switch (node)
         {
             case AstEmpty: break;
             case AstNum: break;
             case AstVar: Visit((AstVar)node); break;
+            case AstVarDecl: Visit((AstVarDecl)node); break;
             case AstUnaryOp: break;
             case AstBinOp: Visit((AstBinOp)node); break;
             case AstAssign: Visit((AstAssign)node); break;
             case AstCompound: Visit((AstCompound)node); break;
             case AstType: break;
+            case AstProcedureCall: Visit((AstProcedureCall)node); break;
             case AstProcedureDecl: Visit((AstProcedureDecl)node); break;
-            case AstVarDecl: Visit((AstVarDecl)node); break;
             case AstBlock: Visit((AstBlock)node); break;
             case AstProgram: Visit((AstProgram)node); break;
 
             default:
-                throw new Exception("Invalid node type found");
+                break;
         }
     }
 
-    public static ScopedSymbolTable? Analyze(Ast ast)
+    public void Analyze()
     {
         Visit(ast);
-
-        return currentScope;
     }
 }

@@ -3,29 +3,20 @@ namespace Pascal;
 
 public class Interpreter
 {
-    public ScopedSymbolTable Symtab { get; }
+    public Ast Ast { get; }
+    Dictionary<string, float> GlobalMemory { get; }
 
-    public Dictionary<string, float> GlobalScope { get; }
-
-    public Interpreter(ScopedSymbolTable symtab)
+    public Interpreter(Ast ast)
     {
-        Symtab = symtab;
-        GlobalScope = new();
-
-        foreach (var item in symtab.Symbols)
-        {
-            if(item.Value is SymbolVar)
-            {
-                GlobalScope.Add(item.Value.Name, 0.0f);
-            }
-        }
+        Ast = ast;
+        GlobalMemory= new();
     }
 
     public override string ToString()
     {
-        string str = "";
+        string str = "---VARIABLES VALUES---\n";
 
-        foreach (var item in GlobalScope)
+        foreach (var item in GlobalMemory)
         {
             str += $"{item.Key} : {item.Value}\n";
         }
@@ -33,56 +24,11 @@ public class Interpreter
         return str;
     }
 
-    private float Visit(AstVar node)
+    private float Visit(AstProgram node)
     {
-        float val = GlobalScope[node.Name];
+        Visit(node.Block);
 
-        return val;
-    }
-
-    private float Visit(AstUnaryOp node)
-    {
-        return node.Op switch
-        {
-            TokenType.PLUS => +Visit(node.Expr),
-            TokenType.MINUS => -Visit(node.Expr),
-            _ => throw new Exception("Invalid node type")
-        };
-    }
-
-    private float Visit(AstBinOp node)
-    {
-        float lval = Visit(node.Left);
-        float rval = Visit(node.Right);
-
-        return node.Op switch
-        {
-            TokenType.PLUS => lval + rval,
-            TokenType.MINUS => lval - rval,
-            TokenType.MUL => lval * rval,
-
-            TokenType.INTEGER_DIV => (int)lval / (int)rval,
-            TokenType.FLOAT_DIV => lval / rval,
-
-            _ => throw new Exception("Invalid node type")
-        };
-    }
-
-    private float Visit(AstAssign node)
-    {
-        GlobalScope[node.Left.Name] = Visit(node.Right);
-
-        return 0;
-    }
-
-    private float Visit(AstCompound node)
-    {
-        foreach (Ast n in node.Nodes)
-        {
-            _ = Visit(n);
-        }
-
-        return 0;
+        return 0.0f;
     }
 
     private float Visit(AstBlock node)
@@ -94,40 +40,93 @@ public class Interpreter
 
         Visit(node.Compound);
 
-        return 0;
+        return 0.0f;
     }
 
-    private float Visit(AstProgram node)
+    private float Visit(AstBinOp node)
     {
-        Visit(node.Block);
+        float lval = Visit(node.Left);
+        float rval = Visit(node.Right);
 
-        return 0;
+        switch (node.Op.Type)
+        {
+            case TokenType.PLUS: return (lval + rval);
+
+            case TokenType.MINUS: return (lval - rval);
+
+            case TokenType.MUL: return (lval* rval);
+
+            case TokenType.INTEGER_DIV: return ((int)lval / (int)rval);
+            
+            case TokenType.FLOAT_DIV: return (lval / rval);
+
+            default: return 0.0f;
+        }
+    }
+
+    private float Visit(AstUnaryOp node)
+    {
+        switch(node.Op.Type)
+        {
+            case TokenType.PLUS: return +Visit(node.Expr);
+
+            case TokenType.MINUS: return -Visit(node.Expr);
+
+            default: return 0.0f;
+        };
+    }
+
+    private float Visit(AstCompound node)
+    {
+        foreach (Ast n in node.Nodes)
+        {
+            _ = Visit(n);
+        }
+
+        return 0.0f;
+    }
+
+    private float Visit(AstAssign node)
+    {
+        GlobalMemory[node.Left.Name] = Visit(node.Right);
+
+        return 0.0f;
+    }
+
+    private float Visit(AstVar node)
+    {
+        float val = GlobalMemory[node.Name];
+
+        return val;
     }
 
     private float Visit(Ast node)
     {
-        return node switch
+        switch(node)
         {
-            AstEmpty => 0.0f,
-            AstNum => ((AstNum)node).FloatValue,
-            AstVar => Visit((AstVar)node),
-            AstUnaryOp => Visit((AstUnaryOp)node),
-            AstBinOp => Visit((AstBinOp)node),
-            AstAssign => Visit((AstAssign)node),
-            AstCompound => Visit((AstCompound)node),
-            AstProcedureDecl => 0.0f,
-            AstType => 0.0f,
-            AstVarDecl => 0.0f,
-            AstBlock => Visit((AstBlock)node),
-            AstProgram => Visit((AstProgram)node),
+            case AstProgram: return Visit((AstProgram)node);
+            case AstBlock: return Visit((AstBlock)node);
+            case AstVarDecl: return 0.0f;
+            case AstType: return 0.0f;
+            case AstBinOp: return Visit((AstBinOp)node);
+            case AstNum: return ((AstNum)node).FloatValue;
+            case AstUnaryOp: return Visit((AstUnaryOp)node);
+            case AstCompound: return Visit((AstCompound)node);
+            case AstAssign: return Visit((AstAssign)node);
+            case AstVar: return Visit((AstVar)node);
+            case AstEmpty: return 0.0f;
+            case AstProcedureDecl: return 0.0f;
+            case AstProcedureCall: return 0.0f;
 
-            _ => throw new Exception("Invalid node type found")
+            default: return 0.0f;
         };
     }
 
-    public void Execute(Ast ast)
+    public void Execute()
     {
-        Visit(ast);
+        Visit(Ast);
+
+        Console.WriteLine(ToString());
     }
 
 }

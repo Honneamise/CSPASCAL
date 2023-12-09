@@ -2,6 +2,7 @@
 
 public enum ErrorCode
 {
+    INVALID_DATATYPE,
     UNEXPECTED_TOKEN,
     ID_NOT_FOUND,
     DUPLICATE_ID
