@@ -4,11 +4,12 @@
 public class SemanticAnalyzer
 {
     Ast ast;
-    ScopedSymbolTable? currentScope = null;
+    ScopedSymbolTable? currentScope;
 
     public SemanticAnalyzer(Ast a)
     {
         ast = a;
+        currentScope = null;
     }
 
     public void Error(ErrorCode code, Token token)
@@ -20,7 +21,7 @@ public class SemanticAnalyzer
 
     public void Log(string msg)
     {
-        if (Init.LogEnabled)
+        if (Init.LogScope)
         {
             Console.WriteLine(msg);
         }

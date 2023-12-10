@@ -1,32 +1,45 @@
 ﻿
+using CSPASCAL;
+
 namespace Pascal;
 
 public class Interpreter
 {
     public Ast Ast { get; }
-    Dictionary<string, float> GlobalMemory { get; }
+    CallStack Stack { get; }
 
     public Interpreter(Ast ast)
     {
         Ast = ast;
-        GlobalMemory= new();
+        Stack = new();
     }
 
-    public override string ToString()
+    public void Log(string msg)
     {
-        string str = "---VARIABLES VALUES---\n";
-
-        foreach (var item in GlobalMemory)
+        if (Init.LogScope)
         {
-            str += $"{item.Key} : {item.Value}\n";
+            Console.WriteLine(msg);
         }
-
-        return str;
     }
 
     private float Visit(AstProgram node)
     {
+        string name = node.Name;
+
+        Log("--Entering Program: " + name);
+
+        ActivationRecord ar = new(name, ArType.PROGRAM, 1);
+
+        Stack.Push(ar);
+
+        Log(Stack.ToString());
+
         Visit(node.Block);
+
+        Log("---Leaving Program: " + name);
+        Log(Stack.ToString());
+
+        _ = Stack.Pop();
 
         return 0.0f;
     }
@@ -88,16 +101,23 @@ public class Interpreter
 
     private float Visit(AstAssign node)
     {
-        GlobalMemory[node.Left.Name] = Visit(node.Right);
+        string name = node.Left.Name;
+        float value = Visit(node.Right);
+
+        ActivationRecord ar = Stack.Peek();
+
+        ar.Set(name, value);
 
         return 0.0f;
     }
 
     private float Visit(AstVar node)
     {
-        float val = GlobalMemory[node.Name];
+        string name = node.Name;
 
-        return val;
+        ActivationRecord ar = Stack.Peek();
+
+        return ar.Get(name);
     }
 
     private float Visit(Ast node)
@@ -125,8 +145,6 @@ public class Interpreter
     public void Execute()
     {
         Visit(Ast);
-
-        Console.WriteLine(ToString());
     }
 
 }

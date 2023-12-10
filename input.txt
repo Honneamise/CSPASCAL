@@ -1,7 +1,14 @@
 PROGRAM Main;
-VAR x : INTEGER;
 
-BEGIN
+VAR x, y: REAL;
+
+   PROCEDURE Alpha(a : INTEGER);
+      VAR y : INTEGER;
+   BEGIN
+      x := a + x + y
+   END;
+
+BEGIN { Main }
 
 x := 2;
 

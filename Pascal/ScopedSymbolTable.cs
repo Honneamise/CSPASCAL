@@ -24,7 +24,7 @@ public class ScopedSymbolTable
 
     public void Log(string msg) 
     { 
-        if(Init.LogEnabled)
+        if(Init.LogScope)
         {
             Console.WriteLine(msg);
         }
@@ -51,14 +51,12 @@ public class ScopedSymbolTable
 
     public override string ToString()
     {
-        string str = $"***\nTABLE:{Name}\nLEVEL:{Level}\nENCLOSING:{Enclosing?.Name}";
+        string str = $"\n[TABLE]\nName: {Name}\nLevel: {Level}\nEnclosing: {Enclosing?.Name}\n";
 
         foreach (var item in Symbols)
         {
-            str += "\n" + item.Value.ToString();
+            str += item.Value.ToString() + "\n";
         }
-
-        str += "\n***";
 
         return str;
     }

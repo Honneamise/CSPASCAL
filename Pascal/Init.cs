@@ -4,7 +4,8 @@ namespace Pascal;
 
 public static class Init
 {
-    public static bool LogEnabled { get; set; }
+    public static bool LogScope { get; set; }
+    public static bool LogStack { get; set; }
 
     private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs ex)
     {
@@ -16,9 +17,10 @@ public static class Init
         }
     }
 
-    public static void Initialize(bool enableLog)
+    public static void Initialize(bool logScope, bool logStack)
     {
-        LogEnabled = enableLog;
+        LogScope = logScope;
+        LogStack = logStack;    
 
         CultureInfo.CurrentCulture = new CultureInfo("en-US");
 
