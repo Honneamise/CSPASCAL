@@ -1,15 +1,29 @@
-PROGRAM Main;
+program Main;
 
-VAR x, y: REAL;
+procedure Alpha(a : integer; b : integer);
+var x : integer;
 
-   PROCEDURE Alpha(a : INTEGER);
-      VAR y : INTEGER;
-   BEGIN
-      x := a + x + y
-   END;
+   procedure Beta(a : integer; b : integer);
+   var x : integer;
+   begin
+      x := a * 10 + b * 2;
+   end;
 
-BEGIN { Main }
+   procedure Gamma(z : integer);
+   var x : integer;
+   begin
+      x := z + 10;
+   end;
 
-x := 2;
+begin
+   x := (a + b ) * 2;
 
-END.  { Main }
+   Beta(5, 10);      { procedure call }
+   Gamma(10);
+end;
+
+begin { Main }
+
+   Alpha(3 + 5, 7);  { procedure call }
+
+end.  { Main }

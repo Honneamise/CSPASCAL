@@ -129,13 +129,14 @@ public class AstParam : Ast
 public class AstProcedureCall: Ast
 {
     public string Name { get; } 
-    public List<Ast> Nodes { get; }
+    public List<Ast> ActualParameters { get; }
     public Token Token { get; }
+    public SymbolProcedure? Symbol { get; set; } //nullable ?
 
-    public AstProcedureCall(string name, List<Ast> nodes, Token token)
+    public AstProcedureCall(string name, List<Ast> parameters, Token token)
     {
         Name = name;
-        Nodes = nodes;
+        ActualParameters = parameters;
         Token = token;
     }
 }
@@ -143,13 +144,13 @@ public class AstProcedureCall: Ast
 public class AstProcedureDecl: Ast
 {
     public string Name { get; }
-    public List<AstParam> Parameters { get; }
+    public List<AstParam> FormalParameters { get; }
     public AstBlock Block { get; }
 
     public AstProcedureDecl(string name, List<AstParam> parameters, AstBlock block)
     {
         Name = name;
-        Parameters = parameters;
+        FormalParameters = parameters;
         Block = block;
     }
 }

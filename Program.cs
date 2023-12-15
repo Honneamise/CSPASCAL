@@ -10,22 +10,23 @@ public class Program
         Init.Initialize(true,true);
 
         string src = File.ReadAllText("input.txt");
-        
+
+        Console.WriteLine("\n*****SOURCE CODE*****\n");
         Console.WriteLine(src);
         
-        Console.WriteLine("********************");
-
         Lexer lexer = new(src);
 
         Parser parser = new(lexer);
 
         Ast ast = parser.GenerateAst();
 
+        Console.WriteLine("\n*****SEMANTIC ANALYZER*****\n");
+
         SemanticAnalyzer analyzer = new(ast);
 
         analyzer.Analyze();
 
-        Console.WriteLine("********************");
+        Console.WriteLine("\n*****INTERPRETER*****\n");
 
         Interpreter intp = new(ast);
 

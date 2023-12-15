@@ -85,12 +85,17 @@ public class SemanticAnalyzer
             Visit(n);
         }
     }
-
+    //TODO: should not the number of formal parameters match the number of actual parameters ?
     private void Visit(AstProcedureCall node)
     {
-        foreach(Ast n in node.Nodes)
+        foreach (Ast n in node.ActualParameters)
         {
             Visit(n);
+        }
+
+        if (currentScope != null)
+        {
+            node.Symbol = (SymbolProcedure?)currentScope.Lookup(node.Name);
         }
     }
 
@@ -110,7 +115,7 @@ public class SemanticAnalyzer
 
             currentScope = procScope;
 
-            foreach (AstParam param in node.Parameters)
+            foreach (AstParam param in node.FormalParameters)
             {
                 Symbol? paramType = currentScope.Lookup(param.Type.Name) ?? throw new Exception($"{param.Type.Name}:invalid data type");
 
@@ -125,11 +130,14 @@ public class SemanticAnalyzer
 
             Visit(node.Block);
 
+            procSymbol.Block = node.Block;
+
             Log(procScope.ToString());
 
             currentScope = currentScope.Enclosing;
 
             Log("---Leaving scope: " + node.Name);
+
         }
     }
 

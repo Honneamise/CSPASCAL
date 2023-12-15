@@ -1,11 +1,11 @@
-﻿namespace CSPASCAL;
+﻿namespace Pascal;
 
 public class CallStack
 {
     Stack<ActivationRecord> records;
 
-    public CallStack() 
-    { 
+    public CallStack()
+    {
         records = new();
     }
 
@@ -14,8 +14,8 @@ public class CallStack
         records.Push(record);
     }
 
-    public ActivationRecord Pop() 
-    { 
+    public ActivationRecord Pop()
+    {
         return records.Pop();
     }
 
@@ -28,11 +28,11 @@ public class CallStack
     {
         string s = "[STACK]\n";
 
-        foreach (ActivationRecord record in records) 
-        { 
+        foreach (ActivationRecord record in records)
+        {
             s += record.ToString() + "\n";
         }
-        
+
         return s;
     }
 }

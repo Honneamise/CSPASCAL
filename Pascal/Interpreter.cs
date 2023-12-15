@@ -1,5 +1,5 @@
-﻿
-using CSPASCAL;
+﻿using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Pascal;
 
@@ -120,6 +120,38 @@ public class Interpreter
         return ar.Get(name);
     }
 
+    private float Visit(AstProcedureCall node)
+    {
+        if (node.Symbol != null)
+        {
+            ActivationRecord ar = new(node.Name, ArType.PROCEDURE, node.Symbol.Level + 1);
+
+            IEnumerable<(SymbolVar paramSymbol, Ast argumentNode)> list = node.Symbol.Parameters.Zip(node.ActualParameters);
+
+            foreach (var (paramSymbol, argumentNode) in list)
+            {
+                ar.Set(paramSymbol.Name, Visit(argumentNode));
+            }
+
+            Stack.Push(ar);
+
+            Log("--Entering Procedure: " + node.Name);
+            Log(Stack.ToString());
+
+            if (node.Symbol.Block != null)
+            {
+                Visit(node.Symbol.Block);
+            }
+
+            Log("--Leaving Procedure: " + node.Name);
+            Log(Stack.ToString());
+
+            Stack.Pop();
+        }
+
+        return 0.0f;
+    }
+
     private float Visit(Ast node)
     {
         switch(node)
@@ -136,7 +168,7 @@ public class Interpreter
             case AstVar: return Visit((AstVar)node);
             case AstEmpty: return 0.0f;
             case AstProcedureDecl: return 0.0f;
-            case AstProcedureCall: return 0.0f;
+            case AstProcedureCall: return Visit((AstProcedureCall)node);
 
             default: return 0.0f;
         };

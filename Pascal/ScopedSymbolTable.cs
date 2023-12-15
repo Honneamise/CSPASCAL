@@ -33,6 +33,9 @@ public class ScopedSymbolTable
     public void Define(Symbol symbol)
     {
         Log($"Defining({Name}): {symbol.Name}");
+
+        symbol.Level = Level;
+
         Symbols[symbol.Name] = symbol;
     }
 

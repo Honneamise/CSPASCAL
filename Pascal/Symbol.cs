@@ -4,10 +4,12 @@
 public class Symbol
 {
     public string Name { get; }
+    public uint Level { get; set; }
 
     public Symbol(string name)
     {  
         Name = name; 
+        Level = 0;
     }
 
     public override string ToString()
@@ -34,6 +36,7 @@ public class SymbolVar : Symbol
 public class SymbolProcedure : Symbol
 {
     public List<SymbolVar> Parameters { get; }
+    public AstBlock? Block { get; set; }
 
     public SymbolProcedure(string name, List<SymbolVar> parameters) : base(name)
     {
